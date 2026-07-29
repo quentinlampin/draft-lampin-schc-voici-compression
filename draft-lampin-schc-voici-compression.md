@@ -60,10 +60,6 @@ and demonstrates how VOICI provides explicit routing metadata that is
 transparently compressed, achieving minimal on-wire overhead while
 preserving standardized dispatch semantics.
 
-# Requirements Language
-
-{::boilerplate bcp14-tagged}
-
 # Terminology
 
 This documents follows the terminology described in {{ARCH}}.
