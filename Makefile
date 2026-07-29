@@ -44,7 +44,7 @@ $(PDF_FILE): $(SOURCE_FILE)
 
 $(MARKDOWN_FILE):  $(SOURCE_FILE)
 	@echo "Saving Markdown source file for revision $(VERSION)"
-	cp $(SOURCE_FILE) $(MARKDOWN_FILE)
+	sed 's/$(DRAFT_NAME)-latest/$(DRAFT_NAME)-$(VERSION)/' $(SOURCE_FILE) > $(MARKDOWN_FILE)
 
 # Clean generated files
 clean:
