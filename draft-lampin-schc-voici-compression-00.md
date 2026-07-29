@@ -3,7 +3,7 @@ v: 3
 
 title: SCHC Compression of VOICI Headers
 abbrev: SCHC-VOICI-Profile
-docname: draft-lampin-schc-voici-compression-latest
+docname: draft-lampin-schc-voici-compression-00
 submissionType: IETF
 
 stand_alone: true
@@ -59,10 +59,6 @@ This document describes the SCHC rules that achieve this compression
 and demonstrates how VOICI provides explicit routing metadata that is
 transparently compressed, achieving minimal on-wire overhead while
 preserving standardized dispatch semantics.
-
-# Requirements Language
-
-{::boilerplate bcp14-tagged}
 
 # Terminology
 
