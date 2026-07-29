@@ -12,13 +12,14 @@ PDF_FILE = $(DRAFT_NAME)-$(VERSION).pdf
 
 
 # Default target
-all: txt html xml pdf
+all: txt html xml pdf md
 
 # Individual targets
 txt: $(TXT_FILE)
 html: $(HTML_FILE)
 xml: $(XML_FILE)
 pdf: $(PDF_FILE)
+md: $(MARKDOWN_FILE)
 
 # Build rules
 $(TXT_FILE): $(SOURCE_FILE)
