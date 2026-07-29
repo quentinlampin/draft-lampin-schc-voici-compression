@@ -2,7 +2,7 @@
 
 **SCHC Compression of VOICI Headers** — Internet-Draft for the IETF SCHC Working Group
 
-This document describes how to compress VOICI headers using SCHC rules at a lower stratum, demonstrating that VOICI provides explicit routing metadata that is transparently compressed to minimal on-wire size while preserving standardized dispatch semantics.
+This document describes how to compress VOICI headers using SCHC rules at a lower stratum, demonstrating that VOICI provides explicit dispatch metadata that is transparently compressed to minimal on-wire size.
 
 ## Files
 
