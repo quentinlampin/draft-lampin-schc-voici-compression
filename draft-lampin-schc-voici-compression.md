@@ -3,7 +3,7 @@ v: 3
 
 title: SCHC Compression of VOICI Headers
 abbrev: SCHC-VOICI-Profile
-docname: draft-lampin-schc-voici-compression-00
+docname: draft-lampin-schc-voici-compression-latest
 submissionType: IETF
 
 stand_alone: true
@@ -31,7 +31,7 @@ normative:
   RFC8724: SCHC
 
 informative:
-  VOICI: I-D.draft-lampin-voici-02
+  VOICI: I-D.draft-lampin-schc-voici-00
 
 
 --- abstract
@@ -72,6 +72,7 @@ header (no optional fields, inline Session ID) is a single byte:
 |V|O|I|CI |S S S|
 +-+-+-+-+-+-+-+-+
 ~~~
+{: #fig-voici-minimal-header title="VOICI minimal header"}
 
 The full header, including all optional fields, is:
 
@@ -88,6 +89,7 @@ The full header, including all optional fields, is:
 |    Original EtherType/Port    |  2B for ET/UDP port,
 +- - - - - - - - - - - - - - - -+  1B for IPv6 NH)
 ~~~
+{: #fig-voici-header title="VOICI header format"}
 
 The first byte is always present.  The V-O-I flags (3 bits), CI field
 (2 bits), and SSS field (3 bits) form the mandatory header.  The
@@ -140,6 +142,8 @@ fields:
 | VOICI.EXT_CI    | Extended CI (LEB128)      | variable  |
 | VOICI.CRC       | CRC-16                    | 16 bits   |
 | VOICI.ORIG_EP   | Original ET/Port          | 1-2 bytes |
+{: #tab-voici-fids title="VOICI header fields IDs for SCHC"}
+
 
 The per-field FIDs (VOICI.V through VOICI.SSS) enable SCHC compression
 rules that elide known sub-fields while preserving the Session ID
@@ -153,22 +157,19 @@ These examples illustrate a stratum scoped to the VOICI header alone.
 If the stratum spans multiple headers (e.g., `[IPv6 | VOICI]`),
 additional Field Descriptors are required for those headers (as shown
 in the concrete example).  When only one session exists on the link,
-the VOICI header has fully deterministic content, and per-field rules
+the minimal VOICI header has fully deterministic content, and per-field rules
 elide each sub-field individually.
 
-~~~
-  +-----------+--+---+--+-----+-------+----------+
-  |     FID   |FL| FP|DI| TV  |  MO   |    CDA   |
-  +-----------+--+---+--+-----+-------+----------+
-  | VOICI.V   | 1| 1 |Bi| 0   | equal | not-sent |
-  | VOICI.O   | 1| 1 |Bi| 0   | equal | not-sent |
-  | VOICI.I   | 1| 1 |Bi| 0   | equal | not-sent |
-  | VOICI.CI  | 2| 1 |Bi| 0x01| equal | not-sent |
-  | VOICI.SSS | 3| 1 |Bi| 0   | equal | not-sent |
-  +-----------+--+---+--+-----+-------+----------+
+|     FID   |FL| FP|DI| TV    |  MO   |    CDA   |
+|-----------|--|---|--|-------|-------|----------|
+| VOICI.V   | 1| 1 |Bi| 0b0   | equal | not-sent |
+| VOICI.O   | 1| 1 |Bi| 0b0   | equal | not-sent |
+| VOICI.I   | 1| 1 |Bi| 0b0   | equal | not-sent |
+| VOICI.CI  | 2| 1 |Bi| 0b01  | equal | not-sent |
+| VOICI.SSS | 3| 1 |Bi| 0b000 | equal | not-sent |
+{: #tab-voici-minimal-compression-1ss title="VOICI minimal header C/D rule, 1 session"}
 
   Residue: 0 bits (all fields elided)
-~~~
 
 ## Scenario B: Two Sessions (1-bit residue)
 
@@ -177,29 +178,29 @@ When two sessions are multiplexed -- Session IDs 0 and 1 mapped to SSS values
 achieved by eliding the known flag and CI bits while preserving SSS via MSB
 matching:
 
-~~~
-  +-----------+--+---+--+-----+-------+----------+
-  |     FID   |FL| FP|DI| TV  |  MO   |    CDA   |
-  +-----------+--+---+--+-----+-------+----------+
-  | VOICI.V   | 1| 1 |Bi| 0   | equal | not-sent |
-  | VOICI.O   | 1| 1 |Bi| 0   | equal | not-sent |
-  | VOICI.I   | 1| 1 |Bi| 0   | equal | not-sent |
-  | VOICI.CI  | 2| 1 |Bi| 0x01| equal | not-sent |
-  | VOICI.SSS | 3| 1 |Bi| 0   | MSB(2)|    LSB   |
-  +-----------+--+---+--+-----+-------+----------+
 
-  Session 0 (SSS=0b000) -> MSB(2) match -> residue: 0
-  Session 1 (SSS=0b001) -> MSB(2) match -> residue: 1
+|     FID   |FL| FP|DI| TV   |  MO   |    CDA   |
+|-----------|--|---|--|------|-------|----------|
+| VOICI.V   | 1| 1 |Bi| 0b0  | equal | not-sent |
+| VOICI.O   | 1| 1 |Bi| 0b0  | equal | not-sent |
+| VOICI.I   | 1| 1 |Bi| 0b0  | equal | not-sent |
+| VOICI.CI  | 2| 1 |Bi| 0b01 | equal | not-sent |
+| VOICI.SSS | 3| 1 |Bi| 0b00 | MSB(2)|    LSB   |
+{: #tab-voici-minimal-compression-2sess title="VOICI minimal header C/D rule, 2 sessions"}
+
+
+  - Session 0 (SSS=0b000) -> MSB(2) match -> residue: 0
+  - Session 1 (SSS=0b001) -> MSB(2) match -> residue: 1
 
   Residue: 1 bit
-~~~
 
 ## Extended Scenarios
 
 ### Multiple Sessions with Inline IDs
 
-For up to 7 inline sessions (SSS values 0-6), the per-field approach
-with MSB matching on SSS can encode any number of sessions:
+For up to 7 inline sessions (SSS values 0-6), the per-field approach with 
+MO/CDAs Match-Mapping, Mapping-Sent or Ignore/Value-Sent on SSS can encode 
+any number of sessions:
 
 * 2 sessions (SSS 0-1): MSB(2) match -> 1 bit residue
 * 3-4 sessions (SSS 0-3): MSB(1) match -> 2 bits residue
@@ -210,23 +211,38 @@ with MSB matching on SSS can encode any number of sessions:
 
 For sessions with SSS=7 (LEB128 extension), the compressor must
 handle the variable-length Session ID field.  A VOICI-aware compressor
-can preserve the LEB128-encoded Session ID as a residual field,
-producing a residue proportional to the Session ID magnitude
-(1 additional byte for Session IDs 7-134, 2 additional bytes for
-135-65535).
+can preserve the LEB128-encoded Session ID as a variable-length residual field,
+producing a residue proportional to the Session ID magnitude: 12 bits for 
+Session IDs 7-134, 20 bits for 135-65535 (4bits encoded length + 1 or 2 bytes of
+LEB128-encoded Session ID).
 
+|     FID   |FL | FP|DI| TV    |  MO    |    CDA     |
+|-----------|---|---|--|-------|--------|------------|
+| VOICI.V   | 1 | 1 |Bi| 0b0   | equal  |  not-sent  |
+| VOICI.O   | 1 | 1 |Bi| 0b0   | equal  |  not-sent  |
+| VOICI.I   | 1 | 1 |Bi| 0b0   | equal  |  not-sent  |
+| VOICI.CI  | 2 | 1 |Bi| 0b01  | equal  |  not-sent  |
+| VOICI.SSS | 3 | 1 |Bi| 0b111 | equal  |  not-sent  |
+| VOICI.SID |VAR| 1 |Bi|       | ignore | value-sent |
+{: #tab-voici-minimal-compression-extsess title="VOICI minimal header C/D rule, Extended Session ID"}
+
+  Residue: 12-20 bits
+
+
+Alternatively, specific rules for each sub-range can be derived setting the 
+Field Length to 8 and 16 bits respectively to match Session IDs 7-134 and 
+135-65535 respectively, reducing the residue to 8 or 16 bits.
 
 # Concrete Example: Multi-Stratum Deployment
 
 This section illustrates a deployment using multiple SCHC strata and
 VOICI for inter-stratum session multiplexing.  It demonstrates how
-VOICI provides explicit routing metadata that is transparently compressed
-by a lower stratum, achieving minimal on-wire overhead while preserving
-standardized dispatch semantics.
+VOICI provides explicit dispatch metadata that is transparently compressed
+by a lower stratum, achieving minimal on-wire overhead.
 
 ## Deployment Scenario
 
-The deployment consists of a 6Lo mesh network with a 6LN (end device),
+The example deployment consists of a 6Lo mesh network with a 6LN (end device),
 a 6LR (mesh router), and a 6LBR (border router).  Beyond the 6LBR,
 a Server hosting both CoAP and CoAPS resides on the Internet.
 
@@ -246,13 +262,13 @@ the same Endpoint that uses VOICI as the Dispatcher.
 
 - Sess.0 and corresponding Context is managed by the Network Operator of
   the 6Lo Network. Having a single Session, the corresponding Endpoint 
-  dispatches SCHC Datagrams directly to the appropriate Instance.
+  dispatches SCHC Data Units directly to the appropriate Instance.
 
 ~~~~~~~~
                                                                       
-+-------+                   +-------+ SCHC     +--------+              
-|  6LN  | SCHC Sess.0       | 6LBR  | Sess.0   | Server | SCHC Sess.1  
-|       |      Sess.1       |       |          |        |      Sess.2
++-------+                   +-------+ SCHC     +--------+             
+|  6LN  | SCHC Sess.0       | 6LBR  | Sess.0   | Server | SCHC Sess.1 
+|       |      Sess.1       |       |          |        |      Sess.2 
 |       |      Sess.2  +----|       |----------+        |             
 |       |              |    |       |          |        |             
 +---+---+              |    +-------+          +--------+             
@@ -263,10 +279,10 @@ the same Endpoint that uses VOICI as the Dispatcher.
                    |       |                                          
                    |       |                                          
                    +-------+                                          
-                                                                    
-          6Lo Network                Internet                         
+                                                                      
+          6Lo Network           |           Internet                  
 ~~~~~~~~
-
+{: #fig-scenario-overview title="Example deployment scenario"}
 
 The deployment uses three SCHC strata:
 
@@ -279,8 +295,8 @@ The deployment uses three SCHC strata:
 The following figure illustrates the 3 SCHC Strata and 3 Instances on the 6LN
 host.
 
-1. Inst.1 compresses UDP/CoAP and produces the SCHC Datagram SCHC Dat.1
-   Inst.2 compresses UDP/CoAPS and produces the SCHC Datagram SCHC Dat.2
+1. Inst.1 compresses UDP/CoAP and produces the SCHC Data Unit SCHC Dat.1
+   Inst.2 compresses UDP/CoAPS and produces the SCHC Data Unit SCHC Dat.2
 
 2. VOICI encapsulates SCHC Dat.1 with SSS:=0b000 or SCHC Dat.2 with SSS:=0b001.
    IPv6 Next Header is set to SCHC.
@@ -314,13 +330,14 @@ Sess.ID0  |  |    VOICI   |
   |SCHC Dat.0|                  
   +----------+   
 ~~~~~~~~
+{: #fig-scenario-6ln title="VOICI header compressed at the 6LN"}
 
 ## SCHC Datagrams on the 6Lo Network
 
-The following Figure illustrates how the datagrams are transported over the
+The following Figure illustrates how the Data Units are transported over the
 6Lo network.
 
-4. 6LN encapsulates the resulting datagram, that is the concatenation of SCHC 
+4. 6LN encapsulates the resulting PDU, that is the concatenation of SCHC 
    Dat.0 and SCHC Dat.1/2, in the 802.15.4 payload with the SCHC Dispatch byte 
    set and sends it to 6LR.
 
@@ -353,13 +370,14 @@ The following Figure illustrates how the datagrams are transported over the
                                                         
     6LN                 6LR                   6LBR                   
 ~~~~~~~~
+{: #fig-scenario-6lo-network title="VOICI compressed on 6Lo Network"}
 
 ## Transport over the Internet and processing at the Server
 
 The following Figure illustrates the SCHC datagrams transported over the 
 Internet in IPv6 frames and how they are processed at the Server.
 
-7. 6LBR forwards to Server
+7. 6LBR forwards the IPv6 frame to the Server
 
 8. The Server Endpoint dispatches the SCHC Dat. to Inst.1/2 based on
    VOICI.SSS value. SCHC Datagrams identified by VOICI.SSS = 0b000 are
@@ -368,33 +386,34 @@ Internet in IPv6 frames and how they are processed at the Server.
    CoAPS. 
    
 9. The Original IPv6 Next Header value is restored to its original value 
-   (UDP,17) and the frame is handled by UDP.
+   (UDP,17) and the frame is handled by UDP which delivers the reconstructed
+   UDP datagram to the application.
    
-10. The CoAP(S) server processes the message.
+10. The CoAP(S) application server processes the message.
 
 ~~~~~~~~
                                           +-------+          
                                           | CoAP  |          
-                                          +-------+    
-                                          |  UDP  |    
-                                          +-------+    
-                                              ^
-    +------------+     +------------+         | SSS:0b000
-    |SCHC Dat.1/2|     |SCHC Dat.1/2|---------+    
-    +------------+     +------------+         | SSS:0b001
-    |    VOICI   |     |    VOICI   |         v
-    +------------+     +------------+     +-------+
-    |    IPv6    |     |     IPv6   |     | CoAPS |
-    +------------+     +------------+     +-------+
-    |     Eth.   |     |     Eth.   |     |  UDP  |         
-    +------+-----+     +------^-----+     +-------+         
-           |                  |                   
-           |  6LBR forwards   |                   
-           +----to-dest.------+                   
-                                                  
-        6LBR                        Dest                   
+                                          +-------+          
+                                          |  UDP  |          
+                                          +-------+          
+                                              ^              
+    +------------+     +------------+         | SSS:0b000    
+    |SCHC Dat.1/2|     |SCHC Dat.1/2|---------+              
+    +------------+     +------------+         | SSS:0b001    
+    |    VOICI   |     |    VOICI   |         v              
+    +------------+     +------------+     +-------+          
+    |    IPv6    |     |     IPv6   |     | CoAPS |          
+    +------------+     +------------+     +-------+          
+    |     Eth.   |     |     Eth.   |     |  UDP  |          
+    +------+-----+     +------^-----+     +-------+          
+           |                  |                              
+           |  6LBR forwards   |                              
+           +----to-Server-----+                              
+                                                             
+        6LBR                        Server                   
 ~~~~~~~~
-
+{: #fig-scenario-internet title="IPv6 frame & VOICI dispatch at the Server"}
 
 ## Formats 
 
@@ -405,7 +424,7 @@ following IPv6 addresses, fd00:1::4 for the 6LN and 2001:db8::13 for the Server.
 ### Upper Stratum Compression
 
 Each upper stratum compresses its respective UDP/CoAP headers independently.
-After upper compression, VOICI encapsulates the upper SCHC datagram with a 
+After upper compression, VOICI encapsulates the upper SCHC datagram with a
 Session ID that routes it to the correct upper context at the receiver:
 
 -  **Session 1**: VOICI byte = `0x08` (V=0, O=0, I=0, CI=01, **SSS=000**)
@@ -422,6 +441,8 @@ The intermediate packet handed to the lower stratum looks like:
   [VOICI Header (SSS=0 or SSS=1)]
   [IPv6 Header (NH=SCHC)]
 ~~~
+{: #fig-scenario-upper-stratum-packet-layout title="Header layout of PDU compressed by Seesion 0"}
+
 
 ### Lower Stratum Compression
 
@@ -432,37 +453,38 @@ from the VOICI.SSS field (MSB(2) with LSB CDA).
 
 **Rule (Session 0)**
 
-~~~~~~~~
-+-----------------+-----+---+--+--------------+--------+----------+
-|      FID        |  FL| FP |DI|      TV      |   MO   |    CDA   |
-+-----------------+-----+---+--+--------------+--------+----------+
-| IPv6 Ver        |   4 | 1 |Bo|      6       | equal  | not-sent |
-| IPv6 Traffic Cl.|   8 | 1 |Bo|      0       | equal  | not-sent |
-| IPv6 Flow Label |  20 | 1 |Bo|      0       | equal  | not-sent |
-| IPv6 Length     |  16 | 1 |Bo|              | ignore | compute-*|
-| IPv6 Next Header|   8 | 1 |Bo|   \<SCHC\>   | equal  | not-sent |
-| IPv6 Hop Limit  |   8 | 1 |Bo|      64      | equal  | not-sent |
-| IPv6 Src Addr   |  64 | 1 |Bo|   fd00:1::4  | equal  | not-sent |
-| IPv6 Dst Addr   |  64 | 1 |Bo| 2001:db8::13 | equal  | not-sent |
+
+|      FID        |  FL | FP|DI|      TV      |   MO   |    CDA   |
+|-----------------|-----|---|--|--------------|--------|----------|
+| IPv6 Ver        |   4 | 1 |Bi|      6       | equal  | not-sent |
+| IPv6 Traffic Cl.|   8 | 1 |Bi|      0       | equal  | not-sent |
+| IPv6 Flow Label |  20 | 1 |Bi|      0       | equal  | not-sent |
+| IPv6 Length     |  16 | 1 |Bi|              | ignore | compute-*|
+| IPv6 Next Header|   8 | 1 |Bi|   \<SCHC\>   | equal  | not-sent |
+| IPv6 Hop Limit  |   8 | 1 |Bi|      64      | equal  | not-sent |
+| IPv6 Src Addr   | 128 | 1 |Bi|   fd00:1::4  | equal  | not-sent |
+| IPv6 Dst Addr   | 128 | 1 |Bi| 2001:db8::13 | equal  | not-sent |
 | VOICI.V         |   1 | 1 |Bi|      0b0     | equal  | not-sent |
 | VOICI.O         |   1 | 1 |Bi|      0b0     | equal  | not-sent |
 | VOICI.I         |   1 | 1 |Bi|      0b0     | equal  | not-sent |
 | VOICI.CI        |   2 | 1 |Bi|     0b01     | equal  | not-sent |
 | VOICI.SSS       |   3 | 1 |Bi|     0b00     | MSB(2) |   LSB    |
-+-----------------+-----+---+--+--------------+--------+----------+
+{: #tab-voici-example-rule-sess0 title="Session 0 C/D rule for IPv6/VOICI"}
 
   Residue: 1 bit
-~~~~~~~~
 
 ### On-the-Wire Result
 
 The resulting 802.15.4 payload is:
+
 ~~~
 +-------------+------------------+---------------------------------+
 |SCHC Dispatch|Lower SCHC Residue|Upper SCHC Residue| CoAP Payload |
 | (01000100)  |      (1bit)      |                  |  (raw)       |
 +-------------+------------------+---------------------------------+
 ~~~
+{: #fig-example-6lo-frame title="802.15.4 payload on the 6Lo network"}
+
 
 # Security Considerations
 
