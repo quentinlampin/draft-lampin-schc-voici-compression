@@ -2,11 +2,14 @@
 
 # Variables
 DRAFT_NAME = draft-lampin-schc-voici-compression
-MARKDOWN_FILE = $(DRAFT_NAME).md
-XML_FILE = $(DRAFT_NAME).xml
-TXT_FILE = $(DRAFT_NAME).txt
-HTML_FILE = $(DRAFT_NAME).html
-PDF_FILE = $(DRAFT_NAME).pdf
+VERSION = 00
+SOURCE_FILE = $(DRAFT_NAME).md
+MARKDOWN_FILE = $(DRAFT_NAME)-$(VERSION).md
+XML_FILE = $(DRAFT_NAME)-$(VERSION).xml
+TXT_FILE = $(DRAFT_NAME)-$(VERSION).txt
+HTML_FILE = $(DRAFT_NAME)-$(VERSION).html
+PDF_FILE = $(DRAFT_NAME)-$(VERSION).pdf
+
 
 # Default target
 all: txt html xml pdf
@@ -18,25 +21,33 @@ xml: $(XML_FILE)
 pdf: $(PDF_FILE)
 
 # Build rules
-$(TXT_FILE): $(MARKDOWN_FILE)
+$(TXT_FILE): $(SOURCE_FILE)
 	@echo "Generating TXT file..."
-	kdrfc --txt $(MARKDOWN_FILE)
+	kdrfc --txt $(SOURCE_FILE) --docrev=$(VERSION)
+	mv $(DRAFT_NAME).txt $(TXT_FILE)
 
-$(HTML_FILE): $(MARKDOWN_FILE)
+$(HTML_FILE): $(SOURCE_FILE)
 	@echo "Generating HTML file..."
-	kdrfc --html $(MARKDOWN_FILE)
+	kdrfc --html $(SOURCE_FILE) --docrev=$(VERSION)
+	mv $(DRAFT_NAME).html $(HTML_FILE)
 
-$(XML_FILE): $(MARKDOWN_FILE)
+$(XML_FILE): $(SOURCE_FILE)
 	@echo "Generating XML file..."
-	kdrfc --xml $(MARKDOWN_FILE)
+	kdrfc --xml $(SOURCE_FILE) --docrev=$(VERSION)
+	mv $(DRAFT_NAME).xml $(XML_FILE)
 
-$(PDF_FILE): $(MARKDOWN_FILE)
+$(PDF_FILE): $(SOURCE_FILE)
 	@echo "Generating PDF file using remote service..."
-	kdrfc --pdf --remote $(MARKDOWN_FILE)
+	kdrfc --pdf --remote $(SOURCE_FILE) --docrev=$(VERSION)
+	mv $(DRAFT_NAME).pdf $(PDF_FILE)
+
+$(MARKDOWN_FILE):  $(SOURCE_FILE)
+	@echo "Saving Markdown source file for revision $(VERSION)"
+	cp $(SOURCE_FILE) $(MARKDOWN_FILE)
 
 # Clean generated files
 clean:
-	rm -f $(TXT_FILE) $(HTML_FILE) $(XML_FILE) $(PDF_FILE)
+	rm -f $(TXT_FILE) $(HTML_FILE) $(XML_FILE) $(PDF_FILE) $(MARKDOWN_FILE)
 
 # Check if required tools are installed
 check-tools:
