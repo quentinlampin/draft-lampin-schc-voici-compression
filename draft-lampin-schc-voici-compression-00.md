@@ -10,7 +10,7 @@ stand_alone: true
 
 ipr: trust200902
 area: Internet
-wg: SCHC Working Group
+wg: schc
 keyword: []
 category: info
 
@@ -32,6 +32,7 @@ normative:
 
 informative:
   VOICI: I-D.draft-lampin-schc-voici-00
+  ARCH: I-D.draft-ietf-schc-architecture-06
 
 
 --- abstract
@@ -47,19 +48,25 @@ and does not modify the VOICI specification itself.
 
 # Introduction
 
-The VOICI link multiplexer ~[VOICI] provides a standardized
+The VOICI link multiplexer [VOICI] provides a standardized
 transport header that carries session identification, content mechanism 
 dispatch, and optional integrity protection with a minimal 1-byte header in the
 common case.
 
-When VOICI is carried over a link where SCHC is also used for header
+When VOICI is carried over a link where SCHC {{RFC8724}} is also used for header
 compression, a lower SCHC stratum can compress the VOICI header itself.
 This document describes the SCHC rules that achieve this compression
 and demonstrates how VOICI provides explicit routing metadata that is
 transparently compressed, achieving minimal on-wire overhead while
 preserving standardized dispatch semantics.
 
-{::boilerplate bcp14}
+# Requirements Language
+
+{::boilerplate bcp14-tagged}
+
+# Terminology
+
+This documents follows the terminology described in {{ARCH}}.
 
 # VOICI Header Layout
 
