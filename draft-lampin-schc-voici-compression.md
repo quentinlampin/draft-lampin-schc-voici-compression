@@ -335,7 +335,7 @@ Sess.ID0  |  |    VOICI   |
 ~~~~~~~~
 {: #fig-scenario-6ln title="VOICI header compressed at the 6LN"}
 
-## SCHC Datagrams on the 6Lo Network
+## SCHC Data Units on the 6Lo Network
 
 The following Figure illustrates how the Data Units are transported over the
 6Lo network.
@@ -377,13 +377,13 @@ The following Figure illustrates how the Data Units are transported over the
 
 ## Transport over the Internet and processing at the Server
 
-The following Figure illustrates the SCHC datagrams transported over the 
+The following Figure illustrates the SCHC Data Units transported over the 
 Internet in IPv6 frames and how they are processed at the Server.
 
 7. 6LBR forwards the IPv6 frame to the Server
 
 8. The Server Endpoint dispatches the SCHC Dat. to Inst.1/2 based on
-   VOICI.SSS value. SCHC Datagrams identified by VOICI.SSS = 0b000 are
+   VOICI.SSS value. SCHC Data Units identified by VOICI.SSS = 0b000 are
    dispatched to Inst.1 which decompresses UDP and CoAP and those with 
    VOICI.SSS= 0b001 are dispatched to Inst.2 which decompresses UDP and
    CoAPS. 
@@ -427,8 +427,8 @@ following IPv6 addresses, fd00:1::4 for the 6LN and 2001:db8::13 for the Server.
 ### Upper Stratum Compression
 
 Each upper stratum compresses its respective UDP/CoAP headers independently.
-After upper compression, VOICI encapsulates the upper SCHC datagram with a
-Session ID that routes it to the correct upper context at the receiver:
+After upper compression, VOICI encapsulates the upper SCHC Data Unit with 
+a Session ID that routes it to the correct upper context at the receiver:
 
 -  **Session 1**: VOICI byte = `0x08` (V=0, O=0, I=0, CI=01, **SSS=000**)
 -  **Session 2**: VOICI byte = `0x09` (V=0, O=0, I=0, CI=01, **SSS=001**)
