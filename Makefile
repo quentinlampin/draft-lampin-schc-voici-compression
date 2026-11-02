@@ -2,7 +2,7 @@
 
 # Variables
 DRAFT_NAME = draft-lampin-schc-voici-compression
-VERSION = 00
+VERSION = 01
 SOURCE_FILE = $(DRAFT_NAME).md
 MARKDOWN_FILE = $(DRAFT_NAME)-$(VERSION).md
 XML_FILE = $(DRAFT_NAME)-$(VERSION).xml
